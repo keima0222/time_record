@@ -1,0 +1,9 @@
+const {test}=require('node:test'),assert=require('node:assert/strict'),C=require('../core.js');
+const base=()=>({version:1,sessions:[]});
+test('切替は前の記録を終了し、同じ時刻に次を開始',()=>{let d=C.change(base(),'sleep',1000);d=C.change(d,'work',3000);assert.deepEqual(d.sessions,[{category:'sleep',start:1000,end:3000},{category:'work',start:3000,end:null}]);});
+test('同じボタンを再度押しても記録は途切れない',()=>{let d=C.change(base(),'sleep',1000);assert.deepEqual(C.change(d,'sleep',3000),d);});
+test('停止と再開の間は未記録',()=>{let d=C.change(base(),'work',1000);d=C.change(d,null,2000);d=C.change(d,'meal',5000);assert.equal(d.sessions[0].end,2000);assert.equal(d.sessions[1].start,5000);});
+test('日付またぎ、閉じた画面、過去の日の集計',()=>{const start=new Date(2026,10,15,23).getTime(),now=new Date(2026,10,16,7).getTime(),d=C.change(base(),'sleep',start);assert.equal(C.summarize(d,new Date(2026,10,15),now).total,3600000);assert.equal(C.summarize(d,new Date(2026,10,16),now).total,7*3600000);assert.equal(C.summarize(d,new Date(2026,10,14),now).total,0);assert.deepEqual(JSON.parse(JSON.stringify(d)),d);});
+test('重複・破損データや途中の未終了記録を拒否',()=>{assert.throws(()=>C.validate({version:1,sessions:[{category:'work',start:100,end:null},{category:'meal',start:200,end:null}]}));assert.throws(()=>C.validate({version:1,sessions:[{category:'work',start:100,end:400},{category:'meal',start:200,end:500}]}));assert.throws(()=>C.validate({version:2,sessions:[]}));});
+test('端末時計が逆戻りした場合は記録を壊さない',()=>{const d=C.change(base(),'work',1000);assert.throws(()=>C.change(d,'meal',900));assert.equal(d.sessions[0].end,null);});
+test('確定済み記録と実行中記録を正しく合算',()=>{const start=new Date(2026,10,16).getTime();let d=C.change(base(),'work',start);d=C.change(d,'meal',start+3600000);const s=C.summarize(d,new Date(start),start+5400000);assert.equal(s.total,5400000);assert.equal(s.totals.work,3600000);assert.equal(s.totals.meal,1800000);});

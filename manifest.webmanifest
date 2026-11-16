@@ -1,0 +1,1 @@
+{"name":"時間記録","short_name":"時間記録","description":"ボタンひとつで、毎日の時間を記録","lang":"ja","id":"./","start_url":"./","scope":"./","display":"standalone","background_color":"#f6f7f3","theme_color":"#176b59","icons":[{"src":"./icon-192.png","sizes":"192x192","type":"image/png","purpose":"any maskable"},{"src":"./icon-512.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}]}
